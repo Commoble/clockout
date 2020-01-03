@@ -1,0 +1,6 @@
+{
+	"block.clockout.clockout_block": "Clockout blok",
+	"block.clockout.clockout_block.owned": "Jij bent de eigenaar van dit Clockout blok",
+	"block.clockout.clockout_block.anonymous_owner": "Iemand anders bezit dit Clockout blok",
+	"block.clockout.clockout_block.known_owner": "Dit Clockout blok is van %s"
+}
