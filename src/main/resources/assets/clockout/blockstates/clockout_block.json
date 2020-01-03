@@ -1,0 +1,7 @@
+{
+	"variants":
+	{
+		"powered=false": {"model": "clockout:block/clockout_block"},
+		"powered=true": {"model": "clockout:block/clockout_block_on"}
+	}
+}
