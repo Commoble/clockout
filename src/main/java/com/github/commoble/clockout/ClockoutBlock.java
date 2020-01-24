@@ -47,9 +47,8 @@ public class ClockoutBlock extends Block
 		return state.get(POWERED) ? super.getLightValue(state) : 0;
 	}
 
-	// on right-click block
 	@Override
-	public ActionResultType func_225533_a_(BlockState state, World world, BlockPos pos, PlayerEntity player, Hand hand, BlockRayTraceResult hit)
+	public ActionResultType onBlockActivated(BlockState state, World world, BlockPos pos, PlayerEntity player, Hand hand, BlockRayTraceResult hit)
 	{
 		if (!(world instanceof ServerWorld))
 		{
