@@ -1,6 +1,5 @@
 package commoble.clockout;
 
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
@@ -11,16 +10,18 @@ import java.util.UUID;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
-import commoble.clockout.util.NBTListHelper;
-import commoble.clockout.util.NBTMapHelper;
+import com.mojang.datafixers.util.Pair;
+import com.mojang.serialization.Codec;
+
+import commoble.clockout.util.CodecHelper;
 import net.minecraft.block.BlockState;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.nbt.CompoundNBT;
-import net.minecraft.nbt.NBTUtil;
+import net.minecraft.nbt.NBTDynamicOps;
 import net.minecraft.state.BooleanProperty;
-import net.minecraft.util.ResourceLocation;
+import net.minecraft.util.RegistryKey;
+import net.minecraft.util.UUIDCodec;
 import net.minecraft.util.math.BlockPos;
-import net.minecraft.world.DimensionType;
 import net.minecraft.world.IWorld;
 import net.minecraft.world.World;
 import net.minecraft.world.server.ServerWorld;
@@ -31,41 +32,43 @@ public class OwnedClockoutBlocksData extends WorldSavedData
 {
 	public static final String DATA_NAME = Clockout.MODID + ":data";
 	public static final String PLAYERS = "players";
-	public static final String PLAYER = "player";
-	public static final String DIMENSIONS = "dimensions";
-	public static final String DIMENSION = "dimension";
-	public static final String POSITIONS = "positions";
-	public static final String POS = "position";
 	
 	// this shouldn't be called on the client, return a fake instance if it is
 	public static final OwnedClockoutBlocksData CLIENT_DUMMY = new OwnedClockoutBlocksData();
 	
+	public static final Codec<Set<BlockPos>> POS_SET_CODEC = CodecHelper.makeSetCodec(BlockPos.CODEC);
+	public static final Codec<Map<RegistryKey<World>, Set<BlockPos>>> WORLD_MAP_CODEC = Codec.unboundedMap(World.CODEC, POS_SET_CODEC);
+	public static final Codec<Map<UUID, Map<RegistryKey<World>, Set<BlockPos>>>> PLAYER_MAP_CODEC =
+		CodecHelper.makeEntryListCodec(UUIDCodec.CODEC, WORLD_MAP_CODEC);
+	
+	
 	// map of player UUID to map of dimension IDs to set of extant positions of clockout blocks owned by that player
-	private Map<UUID, Map<ResourceLocation, Set<BlockPos>>> map = new HashMap<>();
+	// we need player->world->positions rather than world->player->positions, so we can't just store data in different worlds
+	private Map<UUID, Map<RegistryKey<World>, Set<BlockPos>>> map = new HashMap<>();
 	
-	private static final NBTListHelper<BlockPos> BLOCKPOS_LISTER = new NBTListHelper<BlockPos>(
-		POSITIONS,
-		(nbt, pos) -> nbt.put(POS, NBTUtil.writeBlockPos(pos)),
-		nbt -> NBTUtil.readBlockPos(nbt.getCompound(POS))
-	);
-	
-	private static final NBTMapHelper<ResourceLocation, Set<BlockPos>> DIMENSION_TO_BLOCKS_MAPPER =
-		new NBTMapHelper<ResourceLocation, Set<BlockPos>>(
-			DIMENSIONS,
-			(nbt, dimID) -> nbt.putString(DIMENSION, dimID.toString()),
-			nbt -> new ResourceLocation(nbt.getString(DIMENSION)),
-			(nbt, set) -> BLOCKPOS_LISTER.write(new ArrayList<BlockPos>(set), nbt),
-			nbt -> new HashSet<BlockPos>(BLOCKPOS_LISTER.read(nbt))
-	);
-	
-	private static final NBTMapHelper<UUID, Map<ResourceLocation, Set<BlockPos>>> PLAYER_TO_DIMENSION_MAPPER =
-		new NBTMapHelper<UUID, Map<ResourceLocation, Set<BlockPos>>>(
-			PLAYERS,
-			(nbt, playerID) -> nbt.put(PLAYER, NBTUtil.writeUniqueId(playerID)),
-			nbt -> NBTUtil.readUniqueId(nbt.getCompound(PLAYER)),
-			(nbt, map) -> DIMENSION_TO_BLOCKS_MAPPER.write(map, nbt),
-			nbt -> DIMENSION_TO_BLOCKS_MAPPER.read(nbt)
-	);
+//	private static final NBTListHelper<BlockPos> BLOCKPOS_LISTER = new NBTListHelper<BlockPos>(
+//		POSITIONS,
+//		(nbt, pos) -> nbt.put(POS, NBTUtil.writeBlockPos(pos)),
+//		nbt -> NBTUtil.readBlockPos(nbt.getCompound(POS))
+//	);
+//	
+//	private static final NBTMapHelper<ResourceLocation, Set<BlockPos>> DIMENSION_TO_BLOCKS_MAPPER =
+//		new NBTMapHelper<ResourceLocation, Set<BlockPos>>(
+//			DIMENSIONS,
+//			(nbt, dimID) -> nbt.putString(DIMENSION, dimID.toString()),
+//			nbt -> new ResourceLocation(nbt.getString(DIMENSION)),
+//			(nbt, set) -> BLOCKPOS_LISTER.write(new ArrayList<BlockPos>(set), nbt),
+//			nbt -> new HashSet<BlockPos>(BLOCKPOS_LISTER.read(nbt))
+//	);
+//	
+//	private static final NBTMapHelper<UUID, Map<ResourceLocation, Set<BlockPos>>> PLAYER_TO_DIMENSION_MAPPER =
+//		new NBTMapHelper<UUID, Map<ResourceLocation, Set<BlockPos>>>(
+//			PLAYERS,
+//			(nbt, playerID) -> nbt.put(PLAYER, NBTUtil.writeUniqueId(playerID)),
+//			nbt -> NBTUtil.readUniqueId(nbt.getCompound(PLAYER)),
+//			(nbt, map) -> DIMENSION_TO_BLOCKS_MAPPER.write(map, nbt),
+//			nbt -> DIMENSION_TO_BLOCKS_MAPPER.read(nbt)
+//	);
 
 	public OwnedClockoutBlocksData()
 	{
@@ -80,7 +83,7 @@ public class OwnedClockoutBlocksData extends WorldSavedData
 			return CLIENT_DUMMY;
 		}
 		
-		ServerWorld overworld = ((ServerWorld)world).getServer().getWorld(DimensionType.OVERWORLD);
+		ServerWorld overworld = ((ServerWorld)world).getServer().getWorld(World.OVERWORLD);
 		DimensionSavedDataManager storage = overworld.getSavedData();
 		return storage.getOrCreate(OwnedClockoutBlocksData::new, DATA_NAME);
 	}
@@ -91,7 +94,7 @@ public class OwnedClockoutBlocksData extends WorldSavedData
 		return this.map.entrySet().stream()
 			.filter(
 				entry -> entry.getValue() != null &&
-				entry.getValue().getOrDefault(world.getDimension().getType().getRegistryName(), new HashSet<BlockPos>()).contains(pos))
+				entry.getValue().getOrDefault(world.getDimensionKey(), new HashSet<BlockPos>()).contains(pos))
 			.findAny()
 			.map(entry -> entry.getKey()).orElse(null);
 	}
@@ -101,11 +104,11 @@ public class OwnedClockoutBlocksData extends WorldSavedData
 		BlockPos pos = inputPos.toImmutable();	// just in case;
 		if (!this.map.containsKey(playerID))
 		{
-			this.map.put(playerID, new HashMap<ResourceLocation, Set<BlockPos>>());
+			this.map.put(playerID, new HashMap<RegistryKey<World>, Set<BlockPos>>());
 		}
 		
-		Map<ResourceLocation, Set<BlockPos>> subMap = this.map.get(playerID);
-		ResourceLocation dimID = getDimId(world);
+		Map<RegistryKey<World>, Set<BlockPos>> subMap = this.map.get(playerID);
+		RegistryKey<World> dimID = world.getDimensionKey();
 		
 		if (!subMap.containsKey(dimID))
 		{
@@ -126,10 +129,10 @@ public class OwnedClockoutBlocksData extends WorldSavedData
 	
 	private void removeBlock(@Nonnull UUID playerID, @Nonnull World world, @Nonnull BlockPos pos)
 	{
-		Map<ResourceLocation, Set<BlockPos>> subMap = this.map.get(playerID);
+		Map<RegistryKey<World>, Set<BlockPos>> subMap = this.map.get(playerID);
 		if (subMap != null)
 		{
-			ResourceLocation dimID = getDimId(world);
+			RegistryKey<World> dimID = world.getDimensionKey();
 			Set<BlockPos> blockSet = subMap.get(dimID);
 			if (blockSet != null)
 			{
@@ -137,11 +140,6 @@ public class OwnedClockoutBlocksData extends WorldSavedData
 				this.markDirty();
 			}
 		}
-	}
-	
-	private static ResourceLocation getDimId(@Nonnull IWorld world)
-	{
-		return world.getDimension().getType().getRegistryName();
 	}
 	
 	public void onPlayerLogin(@Nonnull ServerWorld serverWorld, @Nonnull PlayerEntity player)
@@ -162,7 +160,7 @@ public class OwnedClockoutBlocksData extends WorldSavedData
 				subMap.entrySet().forEach(entry ->
 				this.setAllBlockStates(
 					playerID,
-					serverWorld.getServer().getWorld(DimensionType.byName(entry.getKey())),
+					serverWorld.getServer().getWorld(entry.getKey()),
 					entry.getValue(),
 					isLoggedInNow
 				)
@@ -182,7 +180,7 @@ public class OwnedClockoutBlocksData extends WorldSavedData
 		BooleanProperty powered = ClockoutBlock.POWERED;
 		if (state.getBlock() == clockoutBlock)
 		{
-			if (state.has(powered) && (state.get(powered) != shouldBePoweredNow))
+			if (state.hasProperty(powered) && (state.get(powered) != shouldBePoweredNow))
 			{
 				world.setBlockState(pos, state.with(powered, shouldBePoweredNow));
 			}
@@ -196,13 +194,19 @@ public class OwnedClockoutBlocksData extends WorldSavedData
 	@Override
 	public void read(CompoundNBT nbt)
 	{
-		this.map = PLAYER_TO_DIMENSION_MAPPER.read(nbt);
+		this.map = PLAYER_MAP_CODEC.decode(NBTDynamicOps.INSTANCE, nbt.get(PLAYERS))
+			.result()
+			.map(Pair::getFirst)
+			.orElse(new HashMap<>());
 	}
 
 	@Override
 	public CompoundNBT write(CompoundNBT nbt)
 	{
-		return PLAYER_TO_DIMENSION_MAPPER.write(this.map, nbt);
+		PLAYER_MAP_CODEC.encodeStart(NBTDynamicOps.INSTANCE, this.map)
+			.result()
+			.ifPresent(inbt -> nbt.put(PLAYERS, inbt));
+		return nbt;
 	}
 
 }

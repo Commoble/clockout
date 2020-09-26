@@ -48,7 +48,7 @@ public class Clockout
 	
 	public static void onRegisterBlocks(Registrator<Block> reg)
 	{
-		reg.register(CLOCKOUT_BLOCK_RL, new ClockoutBlock(Block.Properties.create(Material.ROCK).hardnessAndResistance(3.0F).setLightLevel(ClockoutBlock::getLightValue)));
+		reg.register(CLOCKOUT_BLOCK_RL, new ClockoutBlock(Block.Properties.create(Material.REDSTONE_LIGHT).hardnessAndResistance(3.0F).setLightLevel(ClockoutBlock::getLightValue)));
 	}
 	
 	public static void onRegisterItems(Registrator<Item> reg)
