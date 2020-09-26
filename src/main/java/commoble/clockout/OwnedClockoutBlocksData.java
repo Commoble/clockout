@@ -1,4 +1,4 @@
-package com.github.commoble.clockout;
+package commoble.clockout;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -11,9 +11,8 @@ import java.util.UUID;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
-import com.github.commoble.clockout.util.NBTListHelper;
-import com.github.commoble.clockout.util.NBTMapHelper;
-
+import commoble.clockout.util.NBTListHelper;
+import commoble.clockout.util.NBTMapHelper;
 import net.minecraft.block.BlockState;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.nbt.CompoundNBT;
@@ -21,9 +20,9 @@ import net.minecraft.nbt.NBTUtil;
 import net.minecraft.state.BooleanProperty;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.world.DimensionType;
 import net.minecraft.world.IWorld;
 import net.minecraft.world.World;
-import net.minecraft.world.dimension.DimensionType;
 import net.minecraft.world.server.ServerWorld;
 import net.minecraft.world.storage.DimensionSavedDataManager;
 import net.minecraft.world.storage.WorldSavedData;

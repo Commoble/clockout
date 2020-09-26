@@ -1,4 +1,4 @@
-package com.github.commoble.clockout;
+package commoble.clockout;
 
 import net.minecraft.item.BlockItem;
 import net.minecraftforge.registries.ObjectHolder;

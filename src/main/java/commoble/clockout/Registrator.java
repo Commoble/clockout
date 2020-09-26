@@ -1,4 +1,4 @@
-package com.github.commoble.clockout;
+package commoble.clockout;
 
 import java.util.function.Consumer;
 

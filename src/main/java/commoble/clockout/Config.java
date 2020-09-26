@@ -1,8 +1,7 @@
-package com.github.commoble.clockout;
+package commoble.clockout;
 
-import com.github.commoble.clockout.util.ConfigHelper;
-import com.github.commoble.clockout.util.ConfigHelper.ConfigValueListener;
-
+import commoble.clockout.util.ConfigHelper;
+import commoble.clockout.util.ConfigHelper.ConfigValueListener;
 import net.minecraftforge.common.ForgeConfigSpec;
 
 public class Config

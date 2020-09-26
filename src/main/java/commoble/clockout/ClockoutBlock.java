@@ -1,9 +1,8 @@
-package com.github.commoble.clockout;
+package commoble.clockout;
 
 import java.util.UUID;
 
-import com.github.commoble.clockout.util.Util;
-
+import commoble.clockout.util.Util;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
 import net.minecraft.entity.LivingEntity;
@@ -41,10 +40,9 @@ public class ClockoutBlock extends Block
 		this.setDefaultState(this.getDefaultState().with(POWERED, false));
 	}
 
-	@Override
-	public int getLightValue(BlockState state)
+	public static int getLightValue(BlockState state)
 	{
-		return state.get(POWERED) ? super.getLightValue(state) : 0;
+		return state.get(POWERED) ? 7 : 0;
 	}
 
 	@Override

@@ -10,6 +10,7 @@ loaderVersion="[30,)" #mandatory (28 is current forge version)
 # A URL to refer people to when problems occur with this mod
 issueTrackerURL="https://github.com/Commoble/clockout/issues" #optional
 # A list of mods - how many allowed here is determined by the individual mod loader
+license="MIT License"
 [[mods]] #mandatory
 # The modid of the mod
 modId="clockout" #mandatory
@@ -24,7 +25,7 @@ displayURL="https://www.curseforge.com/minecraft/mc-mods/clockout" #optional
 # A file name (in the root of the mod JAR) containing a logo for display
 logoFile="logo.png" #optional
 # A text field displayed in the mod UI
-credits="I hear the Minecraft Mod Development discord channel is the cat's bananas" #optional
+credits="Thanks to HeresHavi for the Dutch translation" #optional
 # A text field displayed in the mod UI
 authors="Commoble"
 # The description text for the mod (multi line!) (#mandatory)

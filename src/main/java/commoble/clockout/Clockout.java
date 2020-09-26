@@ -1,8 +1,7 @@
-package com.github.commoble.clockout;
+package commoble.clockout;
 
-import com.github.commoble.clockout.util.ConfigHelper;
-import com.github.commoble.clockout.util.Util;
-
+import commoble.clockout.util.ConfigHelper;
+import commoble.clockout.util.Util;
 import net.minecraft.block.Block;
 import net.minecraft.block.material.Material;
 import net.minecraft.entity.player.PlayerEntity;
@@ -49,7 +48,7 @@ public class Clockout
 	
 	public static void onRegisterBlocks(Registrator<Block> reg)
 	{
-		reg.register(CLOCKOUT_BLOCK_RL, new ClockoutBlock(Block.Properties.create(Material.ROCK).hardnessAndResistance(3.0F).lightValue(7)));
+		reg.register(CLOCKOUT_BLOCK_RL, new ClockoutBlock(Block.Properties.create(Material.ROCK).hardnessAndResistance(3.0F).setLightLevel(ClockoutBlock::getLightValue)));
 	}
 	
 	public static void onRegisterItems(Registrator<Item> reg)

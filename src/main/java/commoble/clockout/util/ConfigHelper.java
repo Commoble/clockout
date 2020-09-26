@@ -1,4 +1,4 @@
-package com.github.commoble.clockout.util;
+package commoble.clockout.util;
 
 /*
 The MIT License (MIT)
